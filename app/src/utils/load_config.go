@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/VladimirMarkelov/clui"
 	"github.com/valyala/fastjson"
 )
 
@@ -79,7 +80,10 @@ func SaveToken(f string, tokens *fastjson.Value) {
         var folder, _ = os.Getwd()
         filename = path.Join(folder, ".token.json")
     }
-    os.WriteFile(filename, tokens.MarshalTo(nil), 0666)
+    err := os.WriteFile(filename, tokens.MarshalTo(nil), 0666)
+    if err != nil {
+        clui.Logger().Println("save token error", err)
+    }
 }
 func GetConfigFieldValue(val *fastjson.Value, keys ...string) string {
     if !val.Exists(keys...) {

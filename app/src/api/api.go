@@ -84,6 +84,7 @@ func Login(host *fastjson.Value, tokens *fastjson.Value) (string, error) {
 
 	token = header.Get("X-Auth-Token")
 	var a fastjson.Arena
+	tokens.Set(hostname, a.NewObject())
 	tokens.Get(hostname).Set("token", a.NewString(token))
 	tokens.Get(hostname).Set("time", a.NewNumberFloat64(float64(time.Now().Unix())))
 	utils.SaveToken("", tokens)
