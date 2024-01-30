@@ -51,6 +51,9 @@ func (d *Dashboard) initDashboard() {
 		if e.Ch =='f' || e.Ch == 'F' {
 			d.forcePowerOff(d.table.SelectedRow())
 		}
+		if e.Ch =='o' || e.Ch == 'O' {
+			d.forcePowerOn(d.table.SelectedRow())
+		}
 		return false
 	}, nil)
 
@@ -64,6 +67,7 @@ func (d *Dashboard) initDashboard() {
 	clui.CreateLabel(topFrame, 65, 1, "鼠标点击按钮进行相关操作;按 Q 键退出程序;", clui.Fixed)
 	clui.CreateLabel(topFrame, 65, 1, "使用下上方向键移动表格的光标,按 空格键 选中当前的光标的主机;", clui.Fixed)
 	clui.CreateLabel(topFrame, 65, 1, "若机器不能正常关机，则按 F 键强制关机当前光标的机器;", clui.Fixed)
+	clui.CreateLabel(topFrame, 65, 1, "若机器不能正常开机，则按 O 键强制按下当前光标的机器的电源按钮;", clui.Fixed)
 
 	toolbarFram := clui.CreateFrame(view, clui.AutoSize, clui.AutoSize, clui.BorderThick, clui.Fixed)
 	toolbarFram.SetGaps(10, 0)
@@ -200,7 +204,7 @@ func (d *Dashboard) batchPowerOn(e clui.Event) {
 				continue
 			}
 			clui.Logger().Printf("power on %s", host.Get("HostName").String())
-			api.PowerOnHost(host, d.tokens)
+			api.PowerOnHost(host, d.tokens, false)
 		}
 	})
 }
@@ -211,6 +215,20 @@ func (d *Dashboard) forcePowerOff(row int) {
 		defer d.loadingDlg.SetVisible(false)
 		host := d.data.Get(strconv.Itoa(row))
 		api.PowerOffHost(host, d.tokens, true)
+	})
+}
+
+func (d *Dashboard) forcePowerOn(row int) {
+	name := d.data.Get(strconv.Itoa(row), "HostName").String()
+	confirm("确认", "Confirm again.\nPower On " + name, func() {
+		d.loadingDlg.SetVisible(true)
+		defer d.loadingDlg.SetVisible(false)
+		host := d.data.Get(strconv.Itoa(row))
+		state := utils.GetConfigFieldValue(host, "Power Stat")
+		if state == "On" {
+			return
+		}
+		api.PowerOnHost(host, d.tokens, true)
 	})
 }
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 
 func fetch(url string, method string, payload string, headers map[string]string) (http.Header, *fastjson.Value, error) {
 	client := resty.New()
+	client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	req := client.NewRequest()
 	client.SetTimeout(3 * time.Second)
 	if headers != nil {
@@ -89,6 +91,8 @@ func Login(host *fastjson.Value, tokens *fastjson.Value) (string, error) {
 }
 
 func setPowerState(host *fastjson.Value, tokens *fastjson.Value, state string) (string, error) {
+	clui.Logger().Printf("set %s power state %s\n", host.Get("HostName"), state)
+
 	token, err := Login(host, tokens)
 	if err != nil { return "", err }
 
@@ -110,8 +114,14 @@ func PowerOffHost(host *fastjson.Value, tokens *fastjson.Value, force bool) (str
 	}
 	return setPowerState(host, tokens, state)
 }
-func PowerOnHost(host *fastjson.Value, tokens *fastjson.Value) (string, error) {
-	return setPowerState(host, tokens, "On")
+func PowerOnHost(host *fastjson.Value, tokens *fastjson.Value, force bool) (string, error) {
+	var state string
+	if force {
+		state = "PushPowerButton"
+	} else {
+		state = "On"
+	}
+	return setPowerState(host, tokens, state)
 }
 func GetPowerState(host *fastjson.Value, tokens *fastjson.Value) (state string, err error) {
 	defer func () {
