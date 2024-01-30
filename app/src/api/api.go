@@ -49,7 +49,7 @@ func fetch(url string, method string, payload string, headers map[string]string)
 func Login(host *fastjson.Value, tokens *fastjson.Value) (string, error) {
 	hostname := utils.GetConfigFieldValue(host, "HostName")
 	token := utils.GetConfigFieldValue(tokens, hostname, "token")
-	timestap := tokens.GetInt64(hostname, "time")
+	timestap := int64(tokens.GetFloat64(hostname, "time"))
 	now := time.Now().Unix()
 	if token != "" && (now - timestap) < 1200 {
 		return token, nil
